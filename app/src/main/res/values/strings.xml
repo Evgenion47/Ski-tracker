@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Ski Tracker</string>
+    <string name="notification_channel_name">Active session</string>
+    <string name="notification_channel_description">Shown while a ski session is being recorded</string>
+    <string name="notification_title">Recording ski session</string>
+    <string name="notification_text">Tracking your speed</string>
+</resources>

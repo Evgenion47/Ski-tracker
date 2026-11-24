@@ -1,0 +1,16 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <!-- simple downhill skier: slope + skier dot -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M18,78 L90,46 L90,54 L18,86 Z" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M52,40 m-6,0 a6,6 0 1,1 12,0 a6,6 0 1,1 -12,0" />
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M50,50 l14,6 l-4,10 l-6,-8 z" />
+</vector>
