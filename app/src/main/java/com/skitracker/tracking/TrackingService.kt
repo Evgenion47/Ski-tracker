@@ -8,6 +8,10 @@ import android.app.Service
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ServiceInfo
+import android.hardware.Sensor
+import android.hardware.SensorEvent
+import android.hardware.SensorEventListener
+import android.hardware.SensorManager
 import android.location.Location
 import android.os.Build
 import android.os.IBinder
@@ -37,6 +41,25 @@ class TrackingService : Service() {
 
     private var sessionId: Long = 0L
     private val pendingPoints = mutableListOf<TrackPointEntity>()
+
+    private var sensorManager: SensorManager? = null
+    private var pressureListener: SensorEventListener? = null
+
+    /** Converts pressure (hPa) to altitude relative to the first reading. */
+    private val pressureListenerImpl = object : SensorEventListener {
+        private var referencePressure = 0f
+        override fun onSensorChanged(event: SensorEvent) {
+            val pressure = event.values[0]
+            if (referencePressure == 0f) referencePressure = pressure
+            val relativeAlt = 44330.0 *
+                (1.0 - Math.pow(
+                    (pressure / referencePressure).toDouble(),
+                    1.0 / 5.255,
+                ))
+            if (::accumulator.isInitialized) accumulator.onBarometricAltitude(relativeAlt)
+        }
+        override fun onAccuracyChanged(sensor: Sensor?, accuracy: Int) = Unit
+    }
 
     private val locationCallback = object : LocationCallback() {
         override fun onLocationResult(result: LocationResult) {
@@ -70,8 +93,24 @@ class TrackingService : Service() {
         // Create the DB row now so track points can reference it immediately.
         val repo = (application as SkiTrackerApp).sessionRepository
         sessionId = runBlocking { repo.beginSession() }
+        startBarometer()
         startInForeground()
         locationProvider.startUpdates(locationCallback)
+    }
+
+    private fun startBarometer() {
+        val manager = getSystemService(Context.SENSOR_SERVICE) as SensorManager
+        val sensor = manager.getDefaultSensor(Sensor.TYPE_PRESSURE) ?: return
+        sensorManager = manager
+        pressureListener = pressureListenerImpl
+        manager.registerListener(pressureListenerImpl, sensor, SensorManager.SENSOR_DELAY_NORMAL)
+    }
+
+    private fun stopBarometer() {
+        val listener = pressureListener ?: return
+        sensorManager?.unregisterListener(listener)
+        pressureListener = null
+        sensorManager = null
     }
 
     private fun handleLocation(location: Location) {
@@ -84,7 +123,11 @@ class TrackingService : Service() {
                 timeMillis = location.time,
                 lat = location.latitude,
                 lng = location.longitude,
-                altitudeM = if (location.hasAltitude()) location.altitude else 0.0,
+                altitudeM = if (location.hasAltitude()) {
+                    accumulator.currentAltitudeForStorage(location.altitude)
+                } else {
+                    0.0
+                },
                 speedMs = snapshot.currentSpeedMs,
             ),
         )
@@ -106,6 +149,7 @@ class TrackingService : Service() {
         }
         tracking = false
         locationProvider.stopUpdates(locationCallback)
+        stopBarometer()
         flushPoints()
 
         val snapshot = SessionStateHolder.snapshot.value

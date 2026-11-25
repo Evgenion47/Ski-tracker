@@ -23,9 +23,12 @@ fun formatDuration(ms: Long): String {
 }
 
 /** Vertical gain/loss in meters, e.g. "+456 / −123 m". */
-fun formatElevation(gainM: Float, lossM: Float): String =
-    if (gainM < 1f && lossM < 1f) "--"
-    else "+${gainM.toInt()} / −${lossM.toInt()} m"
+fun formatElevation(gainM: Float, lossM: Float): String {
+    if (gainM < 1f && lossM < 1f) return "--"
+    val gain = if (gainM < 1f) "0" else "+${gainM.toInt()}"
+    val loss = if (lossM < 1f) "0" else "−${lossM.toInt()}"
+    return "$gain / $loss m"
+}
 
 fun formatDateTime(millis: Long): String =
     SimpleDateFormat("MMM d, yyyy · HH:mm", Locale.getDefault()).format(Date(millis))

@@ -35,8 +35,10 @@ an unsigned APK, which Android refuses to install.
   moving time, and average speed, like a pause. Exported runs start at the
   top station, not the lift exit. (Uphill hikes are also classified as
   lifts.)
-- **Elevation** — vertical gain/loss in meters, smoothed to filter GPS
-  altitude noise, shown live and stored with each session in history.
+- **Elevation** — vertical gain/loss in meters, measured by the phone's
+  barometric pressure sensor (sub-meter precision) and anchored to GPS for
+  absolute altitude; stored with each session and shown in history. Falls
+  back to smoothed GPS altitude on devices without a barometer.
 - **Track & export** — every accepted GPS sample is stored with the
   session. Tap any history entry to see the day's track drawn on a canvas
   (start/end marked, no base map — fully offline). "Export GPX" shares a
